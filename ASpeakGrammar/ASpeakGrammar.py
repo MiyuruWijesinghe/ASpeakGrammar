@@ -23,7 +23,7 @@ def checkGrammar(sentence):
         print('data is : '+data)
          
         res = requests.post(url, headers=headers, data=data)
-        print(res.text)
+        print('singlish API response : '+res.text)
         
         sinhalaText = res.text
         print('Sinhala is : '+sinhalaText)
@@ -34,9 +34,7 @@ def checkGrammar(sentence):
         chkStrgFirst = "Test"
         chkStrgFinal = "Test"
 
-        sentenceSize = []
-
-        print('tokens : '+str(tokens))
+        print('tokens & length : '+str(tokens))
         print(len(tokens))
 
         if len(tokens) > 1:
@@ -88,10 +86,9 @@ def checkGrammar(sentence):
         if tense == "test" or singular_plural == "test":
             gramr = "Wrong grammar"
 
-        #print(sentenceSize)
-
         jObj = {}
         jObj["inputText"] = strLine
+        jObj["sinhalaText"] = sinhalaText
         jObj["isCorrectGrammar"] = gramr
         jObj["tense"] = tense
         jObj["numberOfGrammar"] = singular_plural
@@ -103,6 +100,7 @@ def checkGrammar(sentence):
         gramr = "Wrong grammar."
         jObj = {}
         jObj["inputText"] = strLine
+        jObj["sinhalaText"] = sinhalaText
         jObj["isCorrectGrammar"] = gramr
         jObj["tense"] = tense
         jObj["numberOfGrammar"] = singular_plural
