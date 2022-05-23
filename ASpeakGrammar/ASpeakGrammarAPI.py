@@ -1,34 +1,64 @@
 from datetime import datetime
+from flask import Flask
+from flask import Response
 from SinhalaGrammarRules import sinhala
 from nltk import grammar, parse
+from flask import request
 import json
 import string
 import numpy as np
 import requests
 from requests.structures import CaseInsensitiveDict
+import urllib.request
 
-def checkGrammar(sentence):
+app = Flask(__name__)
+
+@app.route('/check-grammar', methods=['GET', 'POST'])
+def upload():
     try:
         singram = grammar.FeatureGrammar.fromstring(sinhala)
         parser = parse.FeatureEarleyChartParser(singram)
-        strLine = sentence
+        strLine = request.json['inputText']
         
+        #****************************
         url = "https://easysinhalaunicode.com/Api/convert"
 
-        headers = CaseInsensitiveDict()
-        headers["content-type"] = "application/x-www-form-urlencoded; charset=UTF-8"
-        headers["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
-        data = "data="+strLine
-        print('strLine is : '+strLine)
-        print('data is : '+data)
-         
-        res = requests.post(url, headers=headers, data=data)
-        print(res.text)
-        
-        sinhalaText = res.text
-        print('Sinhala is : '+sinhalaText)
+        #headers = CaseInsensitiveDict()
+        #headers["content-type"] = "application/x-www-form-urlencoded; charset=UTF-8"
+        #headers["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
 
-        tokens = sinhalaText.split()
+        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'
+        content_type = 'application/x-www-form-urlencoded; charset=UTF-8'
+        headers = {'User-Agent': user_agent, 'Content-Type': content_type}
+        #data = strLine
+        print('strLine is : '+strLine)
+        #print('data is : '+data)
+        print(url)
+        print(headers)
+
+        values = {'data': strLine }
+        print(values)
+        data = urllib.parse.urlencode(values)
+        print(data)
+        data = data.encode('utf-8')
+        print(data)
+        res = urllib.request.urlopen(url, data, headers)
+        print('***********')
+        #resdata = res.read()
+        print(res)
+
+        #res = requests.post(url, headers=headers, data=data)
+        #jsonData = res.json()
+        #for data in jsonData:
+        #    print(data)
+        
+        print(res.text)
+        sinhalaText = res.text
+        print('Singlish : '+sinhalaText)
+
+        #**************************
+
+        tokens = strLine.split()
         trees = parser.parse(tokens)
 
         chkStrgFirst = "Test"
@@ -39,12 +69,42 @@ def checkGrammar(sentence):
         print('tokens : '+str(tokens))
         print(len(tokens))
 
-        if len(tokens) > 1:
+        if len(tokens) == 2:
+            print('in 2nd node')
             i = 0
             for tree in trees:
                 for node in tree:
+
                     for nodenode in node:
                         print(str(node))
+                        if i == 0:
+                            chkStrgFirst = str(nodenode)
+                            print(str(nodenode) + '\n')
+                        i = i + 1
+                        chkStrgFinal = str(nodenode)
+
+        if len(tokens) == 3:
+            print('in 3rd node')
+            i = 0
+            for tree in trees:
+
+                for node in tree:
+
+                    for nodenode in node:
+                        if i == 0:
+                            chkStrgFirst = str(nodenode)
+                            print(str(nodenode) + '\n')
+                        i = i + 1
+                        chkStrgFinal = str(nodenode)
+
+        if len(tokens) == 4:
+            print('in 4th node')
+            i = 0
+            for tree in trees:
+                for node in tree:
+
+                    for nodenode in node:
+
                         if i == 0:
                             chkStrgFirst = str(nodenode)
                             print(str(nodenode) + '\n')
@@ -59,6 +119,8 @@ def checkGrammar(sentence):
         chkStrgFirstArry = chkStrgFirst.split("]")
         chkStrgFirst = chkStrgFirstArry[0]
         print(chkStrgFirst)
+
+        print("***************")
 
         chkStrgFinalArry = chkStrgFinal.split("[")
         chkStrgFinal = chkStrgFinalArry[1]
@@ -107,5 +169,13 @@ def checkGrammar(sentence):
         jObj["tense"] = tense
         jObj["numberOfGrammar"] = singular_plural
 
-    print(jObj)
-    return jObj
+    return Response(json.dumps(jObj), mimetype='application/json')
+
+
+@app.route('/test', methods=['GET', 'POST'])
+def res_massage():
+    return "Hello User!"
+
+
+if __name__ == '__main__':
+    app.run(port=5000, debug=True)
